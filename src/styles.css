@@ -1,8 +1,7 @@
-/* ───────── 색과 글꼴 (시안별) ───────── */
+/* ───────── 색과 글꼴 ───────── */
 
-/* A 카드: 차분한 청회색 + 딥 틸, 노트를 카드로 */
-:root,
-:root[data-variant='a'] {
+/* 차분한 청회색 + 딥 틸, 노트를 카드로 */
+:root {
   --bg: #eef2f1;
   --surface: #fbfcfc;
   --ink: #16212a;
@@ -19,45 +18,8 @@
   --radius-ctl: 10px;
 }
 
-/* B 수첩: 세이지 회색 종이 + 네이비 잉크 + 올리브, 줄노트 목록 */
-:root[data-variant='b'] {
-  --bg: #eff1ea;
-  --surface: #f7f8f3;
-  --ink: #1d2740;
-  --muted: #59606f;
-  --line: #cbd2c3;
-  --accent: #4f5f24;
-  --accent-ink: #f7f8f3;
-  --accent-soft: #dfe5cf;
-  --danger: #9c3a2e;
-  --font-body: 'Gothic A1', system-ui, sans-serif;
-  --font-head: 'Gowun Batang', serif;
-  --head-weight: 700;
-  --radius: 6px;
-  --radius-ctl: 6px;
-}
-
-/* C 굵게: 고대비 무채색 + 인디고, 큰 제목 */
-:root[data-variant='c'] {
-  --bg: #f3f3f6;
-  --surface: #fcfcfe;
-  --ink: #121218;
-  --muted: #595966;
-  --line: #dadae2;
-  --accent: #3b3a9e;
-  --accent-ink: #f5f5ff;
-  --accent-soft: #e1e0f5;
-  --danger: #a32f3a;
-  --font-body: 'Gothic A1', system-ui, sans-serif;
-  --font-head: 'Gothic A1', system-ui, sans-serif;
-  --head-weight: 800;
-  --radius: 10px;
-  --radius-ctl: 999px;
-}
-
 @media (prefers-color-scheme: dark) {
-  :root,
-  :root[data-variant='a'] {
+  :root {
     --bg: #0f1517;
     --surface: #172024;
     --ink: #e4ebeb;
@@ -67,28 +29,6 @@
     --accent-ink: #0b1a19;
     --accent-soft: #1d3532;
     --danger: #ef8a7f;
-  }
-  :root[data-variant='b'] {
-    --bg: #14171c;
-    --surface: #1b1f26;
-    --ink: #e4e7df;
-    --muted: #9ca3a0;
-    --line: #2a3038;
-    --accent: #a8bc6e;
-    --accent-ink: #14171c;
-    --accent-soft: #2a321e;
-    --danger: #ec8d7f;
-  }
-  :root[data-variant='c'] {
-    --bg: #111116;
-    --surface: #1a1a21;
-    --ink: #ececf2;
-    --muted: #9d9dab;
-    --line: #2b2b35;
-    --accent: #a09ef2;
-    --accent-ink: #111116;
-    --accent-soft: #26254a;
-    --danger: #f08a94;
   }
 }
 
@@ -124,26 +64,6 @@ p { margin: 0; }
 
 .screen {
   padding: calc(env(safe-area-inset-top) + 8px) 16px calc(96px + env(safe-area-inset-bottom));
-}
-
-/* 시안 고르기 (임시) */
-.variant-picker {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-  padding: calc(env(safe-area-inset-top) + 8px) 16px 0;
-}
-.variant-picker button {
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--muted);
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 999px;
-}
-.variant-picker button[aria-pressed='true'] {
-  border-color: var(--ink);
-  color: var(--ink);
 }
 
 /* ───────── 하단 탭 ───────── */
@@ -269,24 +189,6 @@ p { margin: 0; }
 }
 .tag { color: var(--accent); }
 
-/* B: 카드 대신 줄노트 */
-[data-variant='b'] .note-list { gap: 0; border-top: 1px solid var(--ink); }
-[data-variant='b'] .note-item {
-  background: none;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-  padding: 18px 2px;
-}
-[data-variant='b'] .note-title { font-size: 19px; }
-[data-variant='b'] .notes-head h1 { font-size: 30px; }
-
-/* C: 큰 제목, 종류는 왼쪽 막대로 */
-[data-variant='c'] .notes-head h1 { font-size: 34px; letter-spacing: -0.035em; }
-[data-variant='c'] .note-item { border: 0; border-left: 4px solid var(--accent); }
-[data-variant='c'] .note-title { font-size: 19px; letter-spacing: -0.02em; }
-[data-variant='c'] .note-type { text-transform: none; color: var(--muted); }
-
 /* 빈 화면 */
 .empty {
   display: grid;
@@ -348,13 +250,12 @@ p { margin: 0; }
   width: 56px;
   height: 56px;
   border: 0;
-  border-radius: var(--radius-ctl) ;
+  border-radius: var(--radius-ctl);
   background: var(--accent);
   color: var(--accent-ink);
   box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent);
   transition: transform 0.15s ease;
 }
-[data-variant='c'] .fab { border-radius: 999px; }
 .fab:active { transform: scale(0.94); }
 
 /* ───────── 작성 화면 ───────── */
