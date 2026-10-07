@@ -1,0 +1,26 @@
+{
+  "name": "stock-study",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "icons": "pwa-assets-generator"
+  },
+  "dependencies": {
+    "@fontsource/gothic-a1": "^5.3.0",
+    "@fontsource/gowun-batang": "^5.3.0",
+    "@fontsource/ibm-plex-sans-kr": "^5.3.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@vite-pwa/assets-generator": "^2.0.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.3",
+    "vite-plugin-pwa": "^2.0.0"
+  }
+}
