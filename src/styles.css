@@ -585,3 +585,4 @@ p { margin: 0; }
 .news-title { font-size: 14.5px; font-weight: 600; }
 a.news-title { display: inline-flex; align-items: baseline; gap: 4px; }
 .news-relation { font-size: 13.5px; }
+.passcode-form { margin-top: 12px; }

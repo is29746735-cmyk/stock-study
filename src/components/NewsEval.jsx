@@ -45,9 +45,11 @@ export default function NewsEval({ account, stock, trades }) {
     <section className="news-eval">
       <h4 className="section-title">뉴스 연관 평가</h4>
 
+      {saved && !busy && <EvalResult data={saved} stale={stale} />}
+
       {!passcode ? (
         <form
-          className="field"
+          className="field passcode-form"
           onSubmit={(e) => {
             e.preventDefault()
             const code = draft.trim()
@@ -74,11 +76,10 @@ export default function NewsEval({ account, stock, trades }) {
       ) : (
         <>
           {error && <p className="error">{error}</p>}
-          {saved && <EvalResult data={saved} stale={stale} />}
           <button type="button" className="btn ghost with-gap" onClick={() => run()}>
             <Sparkle size={18} /> {saved ? '다시 평가받기' : 'AI 평가받기'}
           </button>
-          <p className="hint">국내·해외 뉴스와 소문을 찾아 이 종목 거래를 평가해요. 한 번에 약 300~800원어치 API 크레딧을 써요.</p>
+          <p className="hint">국내·해외 뉴스와 소문을 찾아 이 종목 거래를 평가해요. 한 번에 크레딧 약 $0.5를 쓰고, 1~3분 걸려요.</p>
         </>
       )}
     </section>
@@ -177,7 +178,7 @@ function EvalResult({ data, stale }) {
       )}
 
       <p className="hint">
-        {when.format(new Date(data.at))} 평가{data.costUsd != null && `, 크레딧 약 ${data.costUsd.toFixed(2)} 사용`}. 결과 등급은 코스피와의 차이로 자동 계산해요(2%p 기준). AI 평가는 틀릴 수 있어요. 공부용이며 매매 권유가 아니에요.
+        {when.format(new Date(data.at))} 평가{data.costUsd != null && `, 크레딧 약 $${data.costUsd.toFixed(2)} 사용`}. 결과 등급은 코스피와의 차이로 자동 계산해요(2%p 기준). AI 평가는 틀릴 수 있어요. 공부용이며 매매 권유가 아니에요.
       </p>
     </div>
   )
