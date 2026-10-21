@@ -2,9 +2,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// GitHub Pages 주소가 /stock-study/ 아래라서 기준 경로를 맞춘다.
+// Vercel 주소의 맨 위(/)에서 열린다.
 export default defineConfig({
-  base: '/stock-study/',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
@@ -15,10 +15,9 @@ export default defineConfig({
         short_name: '주식 공부',
         description: '주식 공부를 기록하고 돌아보는 나만의 앱',
         lang: 'ko',
-        // 앱의 고유 번호. 휴대폰 Chrome에 남은 잘못된 설치 기록과 겹치지 않게 새로 정했다.
-        id: '/stock-study/app',
-        start_url: '/stock-study/',
-        scope: '/stock-study/',
+        id: '/',
+        start_url: '/',
+        scope: '/',
         display: 'standalone',
         background_color: '#EEF2F1',
         theme_color: '#EEF2F1',
