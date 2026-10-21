@@ -10,7 +10,12 @@ const GRADES = ['좋음', '보통', '나쁨', '판단 보류']
 const SYSTEM = `당신은 한국 주식 모의 투자 기록을 평가하는 냉정한 평가자입니다. 사용자는 공부용으로 가상의 돈으로 거래했고, 당신의 평가로 자기 판단을 돌아봅니다.
 
 ## 해야 할 일
-1. web_search로 이 종목의 뉴스를 찾습니다. 국내 뉴스와 해외 뉴스(영문 포함)를 모두 찾고, 공시와 커뮤니티 소문(찌라시)도 찾습니다. 거래 시각 전에 나온 정보와 후에 나온 정보를 구분합니다.
+1. web_search로 이 종목의 정보를 찾습니다. 검색 횟수에 한도가 있으니 아래 순서로 고르게 나눠 씁니다.
+   - 국내 뉴스와 공시 (2~3번)
+   - 해외 뉴스, 영문으로 검색 (2~3번)
+   - 커뮤니티 소문·찌라시 (1~2번)
+   - 주가가 크게 오르거나 내린 날짜가 있으면 그 원인 (2번)
+   거래 시각 전에 나온 정보와 후에 나온 정보를 구분합니다.
 2. 찾은 정보와 주어진 가격·지수 자료로 평가한 뒤, 반드시 submit_evaluation 도구로 결과를 제출합니다. 제출이 이 작업의 유일한 출력입니다.
 
 ## 평가 원칙 (반드시 지킴)
@@ -33,7 +38,8 @@ const SYSTEM = `당신은 한국 주식 모의 투자 기록을 평가하는 냉
 
 ## 글쓰기
 - 한국어로, 짧은 문장으로, 전문 용어는 쉬운 말로 풀어 씁니다.
-- 숫자는 주어진 자료에서만 가져옵니다.`
+- 숫자는 주어진 자료에서만 가져옵니다.
+- "코드 계산", "주어진 자료", "도구" 같은 내부 표현을 글에 쓰지 않습니다. 사용자에게 바로 말하듯 씁니다.`
 
 const TOOL = {
   name: 'submit_evaluation',
@@ -62,8 +68,8 @@ const TOOL = {
         required: ['grade', 'text'],
         properties: { grade: { type: 'string', enum: GRADES }, text: { type: 'string', description: '결과와 그 이유' } },
       },
-      luck_vs_skill: { type: 'string', description: '결과가 판단 덕분인지, 시장·운 덕분인지' },
-      market: { type: 'string', description: '코스피 지수와의 관계' },
+      luck_vs_skill: { type: 'string', description: '결과가 판단 덕분인지, 시장·운 덕분인지. 문장으로만 쓴다.' },
+      market: { type: 'string', description: '코스피 지수와의 관계. 문장으로만 쓴다.' },
       outlook: {
         type: 'object',
         additionalProperties: false,
@@ -150,6 +156,19 @@ export function buildContext({ account, stock, trades }, stockDays, kospiDays) {
   return { text: lines.join('\n'), outcomeGrade, rate, indexRate }
 }
 
+// 모델이 문장 대신 {"text": ...}로 감싸 보내는 경우가 있어 풀어 준다
+function unwrapText(v) {
+  if (typeof v !== 'string' || !v.trim().startsWith('{')) return v
+  try {
+    return JSON.parse(v).text ?? v
+  } catch {
+    return v
+  }
+}
+
+// Claude Opus 5.5 요금(1백만 토큰당 입력 $4, 출력 $20, 캐시 읽기 $0.2, 캐시 쓰기 $5)과 검색 1천 번당 $10
+const costOf = (u) => (u.input * 4 + u.output * 20 + u.cacheRead * 0.2 + u.cacheWrite * 5) / 1e6 + u.searches * 0.01
+
 function shiftDate(ymd, days) {
   const d = new Date(`${ymd}T00:00:00Z`)
   d.setUTCDate(d.getUTCDate() + days)
@@ -185,22 +204,30 @@ export async function analyze(body) {
     output_config: { effort: 'high' },
     system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
     tools: [
-      { type: 'web_search_20260209', name: 'web_search', max_uses: 8, user_location: { type: 'approximate', country: 'KR', timezone: 'Asia/Seoul' } },
+      { type: 'web_search_20260209', name: 'web_search', max_uses: 12, user_location: { type: 'approximate', country: 'KR', timezone: 'Asia/Seoul' } },
       TOOL,
     ],
     tool_choice: { type: 'auto' },
   }
 
   let nudged = false
+  const usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, searches: 0 }
   for (let turn = 0; turn < 6; turn++) {
     const res = await client.beta.messages.stream({ ...params, messages }).finalMessage()
+    usage.input += res.usage.input_tokens ?? 0
+    usage.output += res.usage.output_tokens ?? 0
+    usage.cacheRead += res.usage.cache_read_input_tokens ?? 0
+    usage.cacheWrite += res.usage.cache_creation_input_tokens ?? 0
+    usage.searches += res.usage.server_tool_use?.web_search_requests ?? 0
     if (res.stop_reason === 'refusal') throw Object.assign(new Error('AI가 이 요청을 처리하지 않았어요'), { status: 502, expose: true })
 
     const call = res.content.find((b) => b.type === 'tool_use' && b.name === 'submit_evaluation')
     if (call) {
       const result = call.input
       result.outcome.grade = ctx.outcomeGrade // 결과 등급은 코드 계산을 그대로 쓴다
-      return { result, numbers: { rate: ctx.rate, indexRate: ctx.indexRate }, model: res.model, at: new Date().toISOString() }
+      result.luck_vs_skill = unwrapText(result.luck_vs_skill)
+      result.market = unwrapText(result.market)
+      return { result, numbers: { rate: ctx.rate, indexRate: ctx.indexRate }, costUsd: costOf(usage), model: res.model, at: new Date().toISOString() }
     }
 
     messages.push({ role: 'assistant', content: res.content })

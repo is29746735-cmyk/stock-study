@@ -177,7 +177,7 @@ function EvalResult({ data, stale }) {
       )}
 
       <p className="hint">
-        {when.format(new Date(data.at))} 평가. 결과 등급은 코스피와의 차이로 자동 계산해요(2%p 기준). AI 평가는 틀릴 수 있어요. 공부용이며 매매 권유가 아니에요.
+        {when.format(new Date(data.at))} 평가{data.costUsd != null && `, 크레딧 약 ${data.costUsd.toFixed(2)} 사용`}. 결과 등급은 코스피와의 차이로 자동 계산해요(2%p 기준). AI 평가는 틀릴 수 있어요. 공부용이며 매매 권유가 아니에요.
       </p>
     </div>
   )
