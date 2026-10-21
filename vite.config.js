@@ -15,6 +15,8 @@ export default defineConfig({
         short_name: '주식 공부',
         description: '주식 공부를 기록하고 돌아보는 나만의 앱',
         lang: 'ko',
+        // 앱의 고유 번호. 휴대폰 Chrome에 남은 잘못된 설치 기록과 겹치지 않게 새로 정했다.
+        id: '/stock-study/app',
         start_url: '/stock-study/',
         scope: '/stock-study/',
         display: 'standalone',
