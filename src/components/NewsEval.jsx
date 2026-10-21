@@ -1,44 +1,36 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sparkle, ArrowSquareOut, Warning } from '@phosphor-icons/react'
-import { useAnalyses, tradesSignature, requestAnalysis } from '../analysis.js'
-import { useStoredState } from '../storage.js'
+import { useAnalysisStore, setPasscode, startAnalyses, statusOf, keyOf, clearJobError } from '../analysis.js'
 
 const when = new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 const GRADE_CLASS = { 좋음: 'good', 보통: 'neutral', 나쁨: 'bad', '판단 보류': 'neutral' }
 const STEPS = ['국내 뉴스를 찾는 중이에요', '해외 뉴스를 찾는 중이에요', '공시와 소문을 확인하는 중이에요', '거래 시점과 맞춰 보는 중이에요', '평가를 쓰는 중이에요']
 
+// 평가가 시작된 뒤 지난 시간에 맞춰 진행 문구를 보여 준다
+export function useProgressStep(startedAt) {
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    if (!startedAt) return
+    const id = setInterval(() => setNow(Date.now()), 5000)
+    return () => clearInterval(id)
+  }, [startedAt])
+  return startedAt ? STEPS[Math.min(Math.floor((now - startedAt) / 20000), STEPS.length - 1)] : null
+}
+
 // 한 종목의 거래를 뉴스·지수와 엮어 AI가 평가한다
 export default function NewsEval({ account, stock, trades }) {
-  const { get, put } = useAnalyses()
-  const [passcode, setPasscode] = useStoredState('stock-study:passcode', '')
-  const [draft, setDraft] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [step, setStep] = useState(0)
-  const [error, setError] = useState('')
-  const timer = useRef(null)
+  const { results, passcode, jobs } = useAnalysisStore()
+  const key = keyOf(account, stock.code)
+  const saved = results[key]
+  const stale = statusOf(results, account, stock.code, trades) === 'stale'
+  const job = jobs[key]
+  const busy = job?.status === 'queued' || job?.status === 'running'
+  const error = job?.status === 'error' ? job.error : ''
+  const step = useProgressStep(job?.status === 'running' ? job.startedAt : null)
 
-  const saved = get(account, stock.code)
-  const signature = tradesSignature(trades)
-  const stale = saved && saved.signature !== signature
-
-  useEffect(() => () => clearInterval(timer.current), [])
-
-  const run = async (code = passcode) => {
-    if (!code) return
-    setBusy(true)
-    setError('')
-    setStep(0)
-    timer.current = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), 20000)
-    try {
-      const body = await requestAnalysis({ passcode: code, account, stock, trades })
-      put(account, stock.code, { ...body, signature })
-    } catch (e) {
-      if (e.status === 401) setPasscode('')
-      setError(e.message)
-    } finally {
-      clearInterval(timer.current)
-      setBusy(false)
-    }
+  const run = () => {
+    clearJobError(key)
+    startAnalyses([{ account, stock, trades }])
   }
 
   return (
@@ -48,41 +40,50 @@ export default function NewsEval({ account, stock, trades }) {
       {saved && !busy && <EvalResult data={saved} stale={stale} />}
 
       {!passcode ? (
-        <form
-          className="field passcode-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-            const code = draft.trim()
-            if (!code) return
-            setPasscode(code)
-            setDraft('')
-          }}
-        >
-          <label htmlFor="passcode">앱 비밀번호</label>
-          <input id="passcode" type="password" autoComplete="current-password" value={draft} onChange={(e) => setDraft(e.target.value)} />
-          <p className="hint">AI 평가는 요금이 나와서, 비밀번호를 아는 사람만 쓸 수 있어요. 한 번 넣으면 이 휴대폰에 기억해요.</p>
-          {error && <p className="error">{error}</p>}
-          <button type="submit" className="btn ghost">
-            저장
-          </button>
-        </form>
+        <PasscodeForm error={error} onSaved={() => clearJobError(key)} />
       ) : busy ? (
         <div className="eval-busy" aria-live="polite">
           <p>
-            <Sparkle size={16} /> {STEPS[step]}…
+            <Sparkle size={16} /> {job.status === 'queued' ? '차례를 기다리는 중이에요' : step}…
           </p>
-          <p className="hint">1~3분 걸려요. 이 화면을 닫지 말아 주세요.</p>
+          <p className="hint">1~3분 걸려요. 이 화면을 닫아도 계속돼요. 앱을 완전히 끄면 멈춰요.</p>
         </div>
       ) : (
         <>
           {error && <p className="error">{error}</p>}
-          <button type="button" className="btn ghost with-gap" onClick={() => run()}>
+          <button type="button" className="btn ghost with-gap" onClick={run}>
             <Sparkle size={18} /> {saved ? '다시 평가받기' : 'AI 평가받기'}
           </button>
           <p className="hint">국내·해외 뉴스와 소문을 찾아 이 종목 거래를 평가해요. 한 번에 크레딧 약 $0.5를 쓰고, 1~3분 걸려요.</p>
         </>
       )}
     </section>
+  )
+}
+
+// AI 평가용 앱 비밀번호 입력. 한 번 넣으면 휴대폰에 기억한다.
+export function PasscodeForm({ error, onSaved }) {
+  const [draft, setDraft] = useState('')
+  return (
+    <form
+      className="field passcode-form"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const code = draft.trim()
+        if (!code) return
+        setPasscode(code)
+        setDraft('')
+        onSaved?.()
+      }}
+    >
+      <label htmlFor="passcode">앱 비밀번호</label>
+      <input id="passcode" type="password" autoComplete="current-password" value={draft} onChange={(e) => setDraft(e.target.value)} />
+      <p className="hint">AI 평가는 요금이 나와서, 비밀번호를 아는 사람만 쓸 수 있어요. 한 번 넣으면 이 휴대폰에 기억해요.</p>
+      {error && <p className="error">{error}</p>}
+      <button type="submit" className="btn ghost">
+        저장
+      </button>
+    </form>
   )
 }
 

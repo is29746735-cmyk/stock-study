@@ -6,6 +6,7 @@ import { useStoredState } from '../storage.js'
 import LineChart from '../components/LineChart.jsx'
 import TradeForm from '../components/TradeForm.jsx'
 import HoldingDetail from '../components/HoldingDetail.jsx'
+import BatchEval from '../components/BatchEval.jsx'
 
 const won = new Intl.NumberFormat('ko-KR')
 const signed = (n, digits = 2) => `${n > 0 ? '+' : ''}${n.toFixed(digits)}`
@@ -202,6 +203,8 @@ export default function PaperScreen() {
               </ul>
             </section>
           )}
+
+          <BatchEval key={account} account={account} trades={trades} onOpen={(s) => setDetail({ code: s.code, name: s.name, market: s.market })} />
 
           <button
             className="btn ghost reset"
