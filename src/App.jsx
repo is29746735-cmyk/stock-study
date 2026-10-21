@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BookOpenText, Star, Crosshair, ChartLineUp } from '@phosphor-icons/react'
 import NotesScreen from './screens/NotesScreen.jsx'
 import WatchlistScreen from './screens/WatchlistScreen.jsx'
+import PredictionsScreen from './screens/PredictionsScreen.jsx'
 import ComingSoon from './screens/ComingSoon.jsx'
 
 const TABS = [
@@ -22,6 +23,8 @@ export default function App() {
           <NotesScreen />
         ) : tab === 'watch' ? (
           <WatchlistScreen />
+        ) : tab === 'predict' ? (
+          <PredictionsScreen />
         ) : (
           <ComingSoon title={current.label} Icon={current.Icon} />
         )}
