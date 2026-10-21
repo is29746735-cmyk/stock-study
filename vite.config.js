@@ -1,12 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { handlePriceRequest } from './api/_naver.js'
+
+// 개발 중에도 /api/price가 Vercel에서처럼 동작하게 한다.
+const devApi = {
+  name: 'dev-api',
+  configureServer(server) {
+    server.middlewares.use('/api/price', (req, res) => handlePriceRequest(req, res))
+  },
+}
 
 // Vercel 주소의 맨 위(/)에서 열린다.
 export default defineConfig({
   base: '/',
   plugins: [
     react(),
+    devApi,
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
@@ -30,6 +40,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png}'],
+        navigateFallbackDenylist: [/^\/api\//],
         // 한글 글꼴은 조각이 많아서, 화면에 쓰인 조각만 받아 두고 다음부터 재사용한다.
         runtimeCaching: [
           {

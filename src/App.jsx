@@ -3,7 +3,7 @@ import { BookOpenText, Star, Crosshair, ChartLineUp } from '@phosphor-icons/reac
 import NotesScreen from './screens/NotesScreen.jsx'
 import WatchlistScreen from './screens/WatchlistScreen.jsx'
 import PredictionsScreen from './screens/PredictionsScreen.jsx'
-import ComingSoon from './screens/ComingSoon.jsx'
+import PaperScreen from './screens/PaperScreen.jsx'
 
 const TABS = [
   { id: 'notes', label: '노트', Icon: BookOpenText },
@@ -14,7 +14,6 @@ const TABS = [
 
 export default function App() {
   const [tab, setTab] = useState('notes')
-  const current = TABS.find((t) => t.id === tab)
 
   return (
     <div className="app">
@@ -26,7 +25,7 @@ export default function App() {
         ) : tab === 'predict' ? (
           <PredictionsScreen />
         ) : (
-          <ComingSoon title={current.label} Icon={current.Icon} />
+          <PaperScreen />
         )}
       </main>
 
