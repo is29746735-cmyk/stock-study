@@ -2,12 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { handlePriceRequest } from './api/_naver.js'
+import { handleAnalyzeRequest } from './api/_analyze.js'
 
-// 개발 중에도 /api/price가 Vercel에서처럼 동작하게 한다.
+// 개발 중에도 /api/price, /api/analyze가 Vercel에서처럼 동작하게 한다.
 const devApi = {
   name: 'dev-api',
   configureServer(server) {
     server.middlewares.use('/api/price', (req, res) => handlePriceRequest(req, res))
+    server.middlewares.use('/api/analyze', (req, res) => handleAnalyzeRequest(req, res))
   },
 }
 

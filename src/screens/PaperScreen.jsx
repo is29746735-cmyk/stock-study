@@ -183,7 +183,11 @@ export default function PaperScreen() {
               <ul className="trade-list">
                 {[...view.closed].reverse().map((c) => (
                   <li key={c.trade.id}>
-                    <div>
+                    <button
+                      type="button"
+                      className="trade-row"
+                      onClick={() => setDetail({ code: c.trade.code, name: c.trade.name, market: c.trade.market })}
+                    >
                       <b>{c.trade.name}</b>{' '}
                       <span className={`mono ${tone(c.rate)}`}>
                         {signed(c.rate)}% ({c.profit > 0 ? '+' : ''}
@@ -192,7 +196,7 @@ export default function PaperScreen() {
                       <p className="hint">
                         {c.trade.at.slice(0, 10)}에 팔았어요 · {c.heldDays}일 보유
                       </p>
-                    </div>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -213,6 +217,7 @@ export default function PaperScreen() {
 
       {detail && (
         <HoldingDetail
+          account={account}
           stock={detail}
           position={position(detail.code)}
           trades={trades}

@@ -3,6 +3,7 @@ import { X, ArrowSquareOut, Trash } from '@phosphor-icons/react'
 import { getPrices } from '../prices.js'
 import { naverUrl } from '../watchlist.js'
 import LineChart from './LineChart.jsx'
+import NewsEval from './NewsEval.jsx'
 
 const won = new Intl.NumberFormat('ko-KR')
 const RANGES = [
@@ -12,7 +13,7 @@ const RANGES = [
 ]
 
 // 한 종목의 주가 그래프와, 이 계좌에서 그 종목을 사고판 기록
-export default function HoldingDetail({ stock, position, trades, onSell, onBuy, onDeleteTrade, onClose }) {
+export default function HoldingDetail({ account, stock, position, trades, onSell, onBuy, onDeleteTrade, onClose }) {
   const [days, setDays] = useState(null)
   const [failed, setFailed] = useState('')
   const [range, setRange] = useState(66)
@@ -114,6 +115,8 @@ export default function HoldingDetail({ stock, position, trades, onSell, onBuy, 
             </button>
           )}
         </div>
+
+        {mine.length > 0 && <NewsEval account={account} stock={stock} trades={mine} />}
 
         <section>
           <h4 className="section-title">거래 기록</h4>

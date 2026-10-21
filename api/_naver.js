@@ -5,11 +5,11 @@
 const SYMBOL = /^(KOSPI|KOSDAQ|[0-9A-Z]{6})$/
 
 export async function fetchPrices(symbol, tf) {
-  if (!SYMBOL.test(symbol)) throw Object.assign(new Error('종목 코드가 올바르지 않아요'), { status: 400 })
+  if (!SYMBOL.test(symbol)) throw Object.assign(new Error('종목 코드가 올바르지 않아요'), { status: 400, expose: true })
   const timeframe = tf === 'minute' ? 'minute' : 'day'
   const url = `https://fchart.stock.naver.com/sise.nhn?symbol=${symbol}&timeframe=${timeframe}&count=500&requestType=0`
   const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } })
-  if (!res.ok) throw Object.assign(new Error('주가를 받지 못했어요'), { status: 502 })
+  if (!res.ok) throw Object.assign(new Error('주가를 받지 못했어요'), { status: 502, expose: true })
   const xml = new TextDecoder('euc-kr').decode(await res.arrayBuffer())
 
   const name = xml.match(/name="([^"]*)"/)?.[1] ?? symbol
@@ -21,7 +21,7 @@ export async function fetchPrices(symbol, tf) {
     const date = `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`
     items.push([timeframe === 'minute' ? `${date}T${t.slice(8, 10)}:${t.slice(10, 12)}` : date, c])
   }
-  if (items.length === 0) throw Object.assign(new Error('주가 자료가 비어 있어요'), { status: 404 })
+  if (items.length === 0) throw Object.assign(new Error('주가 자료가 비어 있어요'), { status: 404, expose: true })
   return { symbol, name, tf: timeframe, items }
 }
 
